@@ -1,0 +1,4 @@
+{:username          "Mr.Investor"
+ :password          "secret"
+ :start-page        "https://personal.vanguard.com/us/hnwnesc/nesc/LoginPage"
+ :account-link      "https://personal.vanguard.com/us/TPView#11111111"}
