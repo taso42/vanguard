@@ -1,4 +1,7 @@
 {:username          "Mr.Investor"
  :password          "secret"
  :start-page        "https://personal.vanguard.com/us/hnwnesc/nesc/LoginPage"
- :account-link      "https://personal.vanguard.com/us/TPView#11111111"}
+ :account-link      "https://personal.vanguard.com/us/TPView#11111111"
+
+ ;; no clue if this table name is durable
+ :account-table-id  "BHForm2:accountID:0:_id243"}
