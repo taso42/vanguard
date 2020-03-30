@@ -3,19 +3,48 @@
     [clojure.edn :as edn]
     [vanguard.web :as web])
   (:import
-    org.openqa.selenium.chrome.ChromeDriver
-    org.openqa.selenium.By))
+    (org.openqa.selenium By)
+    (org.openqa.selenium.remote RemoteWebDriver RemoteWebElement)
+    (org.openqa.selenium.support.ui ExpectedConditions WebDriverWait)))
 
 
-(defn foo
+(def settings (edn/read-string (slurp "settings.edn")))
+
+
+(defn login
   []
-  (let [settings (edn/read-string (slurp "settings.edn"))
-        driver   (web/connect (:start-page settings))]
-    (web/log-on driver (:username settings) (:password settings))
-    ;;(web/navigate-to-account driver (:account-link-text settings))
-    (.get driver (:account-link settings))
-    driver))
+  (let [settings                (edn/read-string (slurp "settings.edn"))
+        ^RemoteWebDriver driver (web/connect (:start-page settings))]
+
+    (web/log-on driver (:username settings) (:password settings))))
 
 
-(comment
-  (def driver (foo)))
+(defn scrape-account
+  []
+  (let [settings                (edn/read-string (slurp "settings.edn"))
+        ^RemoteWebDriver driver (web/connect (:start-page settings))]
+    (try
+      (web/log-on driver (:username settings) (:password settings))
+      (.get driver (:account-link settings))
+      (doto
+        (WebDriverWait. driver 10)
+        (.until (ExpectedConditions/presenceOfElementLocated (By/id (:account-table-id settings)))))
+      (let [table (.findElement driver (By/id (:account-table-id settings)))]
+        (web/parse-account-table table))
+      (finally
+        (.quit driver)))))
+
+
+(defn cleanup-account-record
+  [record]
+  (update record :amount
+          (fn [amount-str]
+            (-> (clojure.string/replace amount-str #"\$" "")
+                (clojure.string/replace #"," "")
+                read-string))))
+
+
+(defn cleanup-account-data
+  [raw-data]
+  (for [record raw-data]
+    (cleanup-account-record record)))

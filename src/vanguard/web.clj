@@ -36,16 +36,45 @@
     driver))
 
 
-;; maybe not needed if the direct link is permanent
-(defn navigate-to-account
-  [^RemoteWebDriver driver account-link-text]
-  (doto
-    (WebDriverWait. driver 10)
-    (.until (ExpectedConditions/elementToBeClickable (By/linkText account-link-text))))
-  (let [^RemoteWebElement account-link (.findElement driver (By/linkText account-link-text))]
-    (.click account-link)))
+;; maybe not needed if `:account-link` is a durable link
+#_(defn navigate-to-account
+    [^RemoteWebDriver driver account-link-text]
+    (doto
+      (WebDriverWait. driver 10)
+      (.until (ExpectedConditions/elementToBeClickable (By/linkText account-link-text))))
+    (let [^RemoteWebElement account-link (.findElement driver (By/linkText account-link-text))]
+      (.click account-link)))
+
+
+(defn parse-account-row
+  [^RemoteWebElement row]
+  (let [row
+        (reduce
+          (fn [elements ^RemoteWebElement element]
+            (conj elements (.getText element)))
+          []
+          (.findElements row (By/tagName "td")))]
+    (cond
+      ;; mutual fund
+      (= 14 (count row))
+      {:symbol (nth row 0)
+       :name   (nth row 1)
+       :amount (nth row 7)}
+
+      ;; stock
+      (= 12 (count row))
+      {:symbol (nth row 0)
+       :name   (nth row 1)
+       :amount (nth row 7)})))
 
 
 (defn parse-account-table
   [^RemoteWebElement table]
-  (.findElements table (By/tagName "tr")))
+  (reduce
+    (fn [rows ^RemoteWebElement row]
+      (if-let [row (parse-account-row row)]
+        (conj rows row)
+        rows))
+    []
+    (.findElements table (By/tagName "tr"))))
+
