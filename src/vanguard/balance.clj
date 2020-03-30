@@ -1,6 +1,5 @@
 (ns vanguard.balance
   (:require
-    [clojure.edn :as edn]
     [vanguard.core :as v])
   (:gen-class))
 
@@ -8,34 +7,33 @@
 (defn rebalance
   "rebalance by annotating each account record with a :target-amount and a :delta.
   The :delta indicates how much to buy or sell to bring into balance"
-  ([account]
-   (rebalance account 0))
-  ([account cash-to-add]
-   (let [annotate (fn annotate
-                    [account total]
-                    (reduce-kv
-                      (fn [m ticker {:keys [amount target-allocation] :or {target-allocation 0} :as record}]
-                        (let [target%       (float (/ target-allocation 100))
-                              target-amount (* target% total)
-                              delta         (- target-amount amount)]
-                          (assoc m ticker (assoc record :target-amount target-amount :delta delta))))
-                      account
-                      account))
-         total    (+
-                    cash-to-add
-                    (reduce-kv
-                      (fn [tally _ {:keys [amount]}]
-                        (+ tally amount))
-                      0
-                      account))]
-     (annotate account total))))
+  [account total]
+  (reduce-kv
+    (fn [m ticker {:keys [amount target-allocation] :or {target-allocation 0} :as record}]
+      (let [target%       (float (/ target-allocation 100))
+            target-amount (* target% total)
+            delta         (- target-amount amount)]
+        (assoc m ticker (assoc record :target-amount target-amount :delta delta))))
+    account
+    account))
+
+
+(defn sum-by
+  "returns the sum all the values of `field` in the account"
+  [account field]
+  (reduce-kv
+    (fn [tally _ record]
+      (+ tally (get record field)))
+    0
+    account))
 
 
 (defn ->ticker-map
-  "transform account vector into a map keyed by ticker symbol"
+  "transform account vector into a map keyed by ticker symbol. result looks like
+  `\"TICKER\" {:amount XXX}`"
   [account]
   (reduce
-    (fn [m {:keys [symbol amount] :as record}]
+    (fn [m {:keys [symbol amount]}]
       (assoc m symbol {:amount amount}))
     {}
     account))
@@ -54,5 +52,6 @@
 (defn -main
   [& args]
   (let [target-allocation (:target-allocation (v/load-edn "settings.edn"))
-        account           (merge-target-allocation (->ticker-map (v/load-edn "account.edn")) target-allocation)]
-    (clojure.pprint/pprint (rebalance account))))
+        account           (merge-target-allocation (->ticker-map (v/load-edn "account.edn")) target-allocation)
+        total             (sum-by account :amount)]
+    (clojure.pprint/pprint (rebalance account total))))
