@@ -1,29 +1,9 @@
 (ns user
   (:require
-    [clojure.string :as str]
     [clojure.edn :as edn]))
 
 
 (def settings (edn/read-string (slurp "settings.edn")))
-
-
-(defn- trim-name
-  [name]
-  (-> (str/replace name #"\(Cash\) $" "")
-      (str/trim)))
-
-
-(defn squash-cash-holdings
-  [rows]
-  (let [squashed
-        (reduce
-          (fn [m {:keys [symbol name amount] :as record}]
-            (if (get m symbol)
-              (update-in m [symbol :amount] (fn [a] (+ a amount)))
-              (assoc m symbol (assoc record :name (trim-name name)))))
-          {}
-          rows)]
-    (map #(get squashed %) (keys squashed))))
 
 
 (def raw-data

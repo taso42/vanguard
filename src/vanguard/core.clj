@@ -2,6 +2,7 @@
   (:require
     [clojure.edn :as edn]
     [clojure.pprint :refer [pprint]]
+    [clojure.string :as str]
     [vanguard.web :as web])
   (:import
     (org.openqa.selenium By)
@@ -36,9 +37,34 @@
         (.quit driver)))))
 
 
+(defn- trim-name
+  [name]
+  (-> (str/replace name #"\(Cash\) $" "")
+      (str/trim)))
+
+
+(defn squash-cash-holdings
+  [rows]
+  (let [squashed
+        (reduce
+          (fn [m {:keys [symbol name amount] :as record}]
+            (if (get m symbol)
+              (update-in m [symbol :amount] (fn [a] (+ a amount)))
+              (assoc m symbol (assoc record :name (trim-name name)))))
+          {}
+          rows)]
+    (mapv #(get squashed %) (keys squashed))))
+
+
+(defn load-settings
+  []
+  (edn/read-string (slurp "settings.edn")))
+
+
 (defn -main
   [& args]
   (let [outfile (or (first args) "account.edn")
-        data    (scrape-account-data (edn/read-string (slurp "settings.edn")))]
+        data    (-> (scrape-account-data (load-settings))
+                    squash-cash-holdings)]
     (println "output to" outfile)
     (spit outfile data)))
