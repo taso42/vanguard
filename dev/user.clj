@@ -15,8 +15,13 @@
   []
   (let [settings                (edn/read-string (slurp "settings.edn"))
         ^RemoteWebDriver driver (web/connect (:start-page settings))]
-
-    (web/log-on driver (:username settings) (:password settings))))
+    (web/log-on driver (:username settings) (:password settings))
+    (println "waiting for login")
+    (doto
+      (WebDriverWait. driver 120)
+      (.until (ExpectedConditions/presenceOfElementLocated (By/id "BalancesTabBoxId_tabBoxItemLink0"))))
+    (println "logged in.")
+    driver))
 
 
 (defn scrape-account
@@ -48,3 +53,8 @@
   [raw-data]
   (for [record raw-data]
     (cleanup-account-record record)))
+
+
+(doto
+  (WebDriverWait. driver 5)
+  (.until (ExpectedConditions/presenceOfElementLocated (By/partialLinkText "Welcome back"))))
