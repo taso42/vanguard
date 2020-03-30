@@ -10,8 +10,10 @@ pom.xml.asc
 /.nrepl-port
 .hgignore
 .hg/
+
 ##
 settings.edn
+account.edn
 *.iml
 /.idea
 **/*~

@@ -56,15 +56,15 @@
     (mapv #(get squashed %) (keys squashed))))
 
 
-(defn load-settings
-  []
-  (edn/read-string (slurp "settings.edn")))
+(defn load-edn
+  [file]
+  (edn/read-string (slurp file)))
 
 
 (defn -main
   [& args]
   (let [outfile (or (first args) "account.edn")
-        data    (-> (scrape-account-data (load-settings))
+        data    (-> (scrape-account-data (load-edn "settings.edn"))
                     squash-cash-holdings)]
     (println "output to" outfile)
     (spit outfile data)))
