@@ -4,4 +4,11 @@
  :account-link      "https://personal.vanguard.com/us/TPView#11111111"
 
  ;; no clue if this table name is durable
- :account-table-id  "BHForm2:accountID:0:_id243"}
+ :account-table-id  "BHForm2:accountID:0:_id243"
+
+ :target-allocation {"VIPSX" 10.5
+                     "VBTLX" 10.5
+                     "VTABX" 9
+                     "VTSAX" 24.5
+                     "BRK B" 24.5
+                     "VTIAX" 21}}

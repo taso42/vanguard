@@ -45,6 +45,11 @@
     (let [^RemoteWebElement account-link (.findElement driver (By/linkText account-link-text))]
       (.click account-link)))
 
+(defn- $->number
+  [amount-str]
+  (-> (clojure.string/replace amount-str #"\$" "")
+      (clojure.string/replace #"," "")
+      read-string))
 
 (defn parse-account-row
   [^RemoteWebElement row]
@@ -59,13 +64,13 @@
       (= 14 (count row))
       {:symbol (nth row 0)
        :name   (nth row 1)
-       :amount (nth row 7)}
+       :amount ($->number (nth row 7))}
 
       ;; stock
       (= 12 (count row))
       {:symbol (nth row 0)
        :name   (nth row 1)
-       :amount (nth row 7)})))
+       :amount ($->number (nth row 7))})))
 
 
 (defn parse-account-table
