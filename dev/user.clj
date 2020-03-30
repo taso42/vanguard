@@ -1,60 +1,21 @@
 (ns user
   (:require
-    [clojure.edn :as edn]
-    [vanguard.web :as web])
-  (:import
-    (org.openqa.selenium By)
-    (org.openqa.selenium.remote RemoteWebDriver RemoteWebElement)
-    (org.openqa.selenium.support.ui ExpectedConditions WebDriverWait)))
+    [clojure.edn :as edn]))
 
 
 (def settings (edn/read-string (slurp "settings.edn")))
 
 
-(defn login
-  []
-  (let [settings                (edn/read-string (slurp "settings.edn"))
-        ^RemoteWebDriver driver (web/connect (:start-page settings))]
-    (web/log-on driver (:username settings) (:password settings))
-    (println "waiting for login")
-    (doto
-      (WebDriverWait. driver 120)
-      (.until (ExpectedConditions/presenceOfElementLocated (By/id "BalancesTabBoxId_tabBoxItemLink0"))))
-    (println "logged in.")
-    driver))
-
-
-(defn scrape-account
-  []
-  (let [settings                (edn/read-string (slurp "settings.edn"))
-        ^RemoteWebDriver driver (web/connect (:start-page settings))]
-    (try
-      (web/log-on driver (:username settings) (:password settings))
-      (.get driver (:account-link settings))
-      (doto
-        (WebDriverWait. driver 10)
-        (.until (ExpectedConditions/presenceOfElementLocated (By/id (:account-table-id settings)))))
-      (let [table (.findElement driver (By/id (:account-table-id settings)))]
-        (web/parse-account-table table))
-      (finally
-        (.quit driver)))))
-
-
-(defn cleanup-account-record
-  [record]
-  (update record :amount
-          (fn [amount-str]
-            (-> (clojure.string/replace amount-str #"\$" "")
-                (clojure.string/replace #"," "")
-                read-string))))
-
-
-(defn cleanup-account-data
-  [raw-data]
-  (for [record raw-data]
-    (cleanup-account-record record)))
-
-
-(doto
-  (WebDriverWait. driver 5)
-  (.until (ExpectedConditions/presenceOfElementLocated (By/partialLinkText "Welcome back"))))
+(def raw-data
+  [{:symbol "VGENX" :name "Vanguard Energy Fund Investor Shares (Cash) " :amount 39.67}
+   {:symbol "VGENX" :name "Vanguard Energy Fund Investor Shares " :amount 4684.61}
+   {:symbol "VIPSX" :name "Vanguard Inflation-Protected Securities Fund Investor Shares (Cash) " :amount 258.35}
+   {:symbol "VIPSX" :name "Vanguard Inflation-Protected Securities Fund Investor Shares " :amount 44768.6}
+   {:symbol "VGSLX" :name "Vanguard Real Estate Index Fund Admiral Shares " :amount 6235.51}
+   {:symbol "VBTLX" :name "Vanguard Total Bond Market Index Fund Admiral Shares " :amount 44988.17}
+   {:symbol "VTABX" :name "Vanguard Total International Bond Index Fund Admiral Shares " :amount 37622.61}
+   {:symbol "VTIAX" :name "Vanguard Total International Stock Index Fund Admiral Shares (Cash) " :amount 1808.01}
+   {:symbol "VTIAX" :name "Vanguard Total International Stock Index Fund Admiral Shares " :amount 60305.74}
+   {:symbol "VTSAX" :name "Vanguard Total Stock Market Index Fund Admiral Shares (Cash) " :amount 979.45}
+   {:symbol "VTSAX" :name "Vanguard Total Stock Market Index Fund Admiral Shares " :amount 72847.9}
+   {:symbol "BRK B" :name "BERKSHIRE HATHAWAY INC CL B NEW " :amount 78152.1}])
