@@ -17,5 +17,10 @@
             "rebalance" ["with-profile" "rebalance" "run"]}
 
   :profiles {:uberjar   {:aot :all}
+
+             :repl      {:dependencies [[vvvvalvalval/scope-capture "0.3.2"]]
+                         :injections   [(require 'sc.api)]}
+
              :fetch     {:main vanguard.core}
+
              :rebalance {:main vanguard.balance}})
