@@ -30,8 +30,8 @@
   `\"TICKER\" {:amount XXX}`"
   [account]
   (reduce
-    (fn [m {:keys [symbol amount]}]
-      (assoc m symbol {:amount amount}))
+    (fn [m {:keys [symbol amount name]}]
+      (assoc m symbol {:amount amount :name name}))
     {}
     account))
 
@@ -48,9 +48,13 @@
 
 (defn print-summary
   [account]
-  (printf "%-5s  %-10s %-10s %-10s\n" "SYMBOL" "AMOUNT" "TARGET" "DELTA")
-  (doseq [[symbol {:keys [amount target-amount delta]}] account]
-    (printf "%-5s: %,10.2f %,10.2f %,10.2f\n" symbol amount target-amount delta)))
+  (printf "%-60s %-5s   %-10s %-10s %-10s\n" "NAME" "SYMBOL" "AMOUNT" "TARGET" "DELTA")
+  (doseq [[symbol {:keys [name amount target-amount delta]}] account]
+    (printf "%-60s (%-5s): %,10.2f %,10.2f %,10.2f\n" name symbol amount target-amount delta))
+  (println (apply str (repeat 102 \-)))
+  (let [current-balance (sum-by account :amount)
+        target-balance  (sum-by account :target-amount)]
+    (printf "%s %,10.2f %,10.2f\n" (apply str (repeat 69 " ")) current-balance target-balance)))
 
 
 (defn -main
