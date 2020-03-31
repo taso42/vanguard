@@ -1,4 +1,6 @@
 (ns vanguard.web
+  (:require
+    [vanguard.util :as u])
   (:import
     (org.openqa.selenium.chrome ChromeDriver)
     (org.openqa.selenium By)
@@ -36,21 +38,6 @@
     driver))
 
 
-;; maybe not needed if `:account-link` is a durable link
-#_(defn navigate-to-account
-    [^RemoteWebDriver driver account-link-text]
-    (doto
-      (WebDriverWait. driver 10)
-      (.until (ExpectedConditions/elementToBeClickable (By/linkText account-link-text))))
-    (let [^RemoteWebElement account-link (.findElement driver (By/linkText account-link-text))]
-      (.click account-link)))
-
-(defn- $->number
-  [amount-str]
-  (-> (clojure.string/replace amount-str #"\$" "")
-      (clojure.string/replace #"," "")
-      read-string))
-
 (defn parse-account-row
   [^RemoteWebElement row]
   (let [row
@@ -64,13 +51,13 @@
       (= 14 (count row))
       {:symbol (nth row 0)
        :name   (nth row 1)
-       :amount ($->number (nth row 7))}
+       :amount (u/$->number (nth row 7))}
 
       ;; stock
       (= 12 (count row))
       {:symbol (nth row 0)
        :name   (nth row 1)
-       :amount ($->number (nth row 7))})))
+       :amount (u/$->number (nth row 7))})))
 
 
 (defn parse-account-table

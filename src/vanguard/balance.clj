@@ -1,12 +1,8 @@
 (ns vanguard.balance
   (:require
-    [vanguard.core :as v])
+    [vanguard.util :as u]
+    [clojure.pprint])
   (:gen-class))
-
-
-(defn round
-  [n s]
-  (double (.setScale ^java.math.BigDecimal (bigdec n) (int s) java.math.RoundingMode/HALF_UP)))
 
 
 (defn rebalance
@@ -16,8 +12,8 @@
   (reduce-kv
     (fn [m ticker {:keys [amount target-allocation] :or {target-allocation 0} :as record}]
       (let [target%       (double (/ target-allocation 100))
-            target-amount (round (* target% total) 2)
-            delta         (round (- target-amount amount) 2)]
+            target-amount (u/round (* target% total) 2)
+            delta         (u/round (- target-amount amount) 2)]
         (assoc m ticker (assoc record :target-amount target-amount :delta delta))))
     account
     account))
@@ -50,9 +46,18 @@
     target-allocation))
 
 
+(defn print-summary
+  [account]
+  (clojure.pprint/pprint account))
+
+
 (defn -main
   [& args]
-  (let [target-allocation (:target-allocation (v/load-edn "settings.edn"))
-        account           (merge-target-allocation (->ticker-map (v/load-edn "account.edn")) target-allocation)
-        total             (sum-by account :amount)]
-    (clojure.pprint/pprint (rebalance account total))))
+  (let [cash-to-add       (if (first args)
+                            (read-string (first args))
+                            0)
+        target-allocation (:target-allocation (u/load-edn "settings.edn"))
+        account           (merge-target-allocation (->ticker-map (u/load-edn "account.edn")) target-allocation)
+        total             (+ cash-to-add (sum-by account :amount))
+        rebalanced        (rebalance account total)]
+    (print-summary rebalanced)))
