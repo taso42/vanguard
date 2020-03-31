@@ -4,15 +4,20 @@
   (:gen-class))
 
 
+(defn round
+  [n s]
+  (double (.setScale ^java.math.BigDecimal (bigdec n) (int s) java.math.RoundingMode/HALF_UP)))
+
+
 (defn rebalance
   "rebalance by annotating each account record with a :target-amount and a :delta.
   The :delta indicates how much to buy or sell to bring into balance"
   [account total]
   (reduce-kv
     (fn [m ticker {:keys [amount target-allocation] :or {target-allocation 0} :as record}]
-      (let [target%       (float (/ target-allocation 100))
-            target-amount (* target% total)
-            delta         (- target-amount amount)]
+      (let [target%       (double (/ target-allocation 100))
+            target-amount (round (* target% total) 2)
+            delta         (round (- target-amount amount) 2)]
         (assoc m ticker (assoc record :target-amount target-amount :delta delta))))
     account
     account))
@@ -21,11 +26,7 @@
 (defn sum-by
   "returns the sum all the values of `field` in the account"
   [account field]
-  (reduce-kv
-    (fn [tally _ record]
-      (+ tally (get record field)))
-    0
-    account))
+  (apply + (map #(get (second %) field) account)))
 
 
 (defn ->ticker-map
