@@ -11,4 +11,7 @@
                      "VTABX" 9
                      "VTSAX" 24.5
                      "BRK B" 24.5
-                     "VTIAX" 21}}
+                     "VTIAX" 21}
+
+ ;; output file for the fetched data. the rebalance program acts on this
+ :output-file       "account.edn"}

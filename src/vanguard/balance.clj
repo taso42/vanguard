@@ -1,6 +1,7 @@
 (ns vanguard.balance
   (:require
     [vanguard.util :as u]
+    [clojure.tools.cli :refer [parse-opts]]
     [clojure.pprint])
   (:gen-class))
 
@@ -57,13 +58,27 @@
     (printf "%s %,10.2f %,10.2f\n" (apply str (repeat 69 " ")) current-balance target-balance)))
 
 
+(def cli-options
+  ;; An option with a required argument
+  [["-s" "--settings FILE" "settings file"
+    :default "settings.edn"]
+
+   ["-c" "--cash AMOUNT" "cash to add"
+    :parse-fn #(Integer/parseInt %)
+    :default 0]
+
+   ;; A boolean option defaulting to nil
+   ["-h" "--help"]])
+
+
 (defn -main
   [& args]
-  (let [cash-to-add       (if (first args)
-                            (read-string (first args))
-                            0)
-        target-allocation (:target-allocation (u/load-edn "settings.edn"))
-        account           (merge-target-allocation (->ticker-map (u/load-edn "account.edn")) target-allocation)
+  (let [opts              (parse-opts args cli-options)
+        settings          (u/load-edn (get-in opts [:options :settings]))
+        cash-to-add       (get-in opts [:options :cash])
+        target-allocation (:target-allocation settings)
+        account-file      (or (:output-file settings) "account.edn")
+        account           (merge-target-allocation (->ticker-map (u/load-edn account-file)) target-allocation)
         total             (+ cash-to-add (sum-by account :amount))
         rebalanced        (rebalance account total)]
     (print-summary rebalanced)))

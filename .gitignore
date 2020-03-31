@@ -17,3 +17,4 @@ account.edn
 *.iml
 /.idea
 **/*~
+/local

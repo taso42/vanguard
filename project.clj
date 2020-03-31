@@ -5,6 +5,7 @@
             :url  "https://www.eclipse.org/legal/epl-2.0/"}
 
   :dependencies [[org.clojure/clojure "1.10.1"]
+                 [org.clojure/tools.cli "1.0.194"]
                  [org.seleniumhq.selenium/selenium-java "3.141.59"]]
 
   :main ^:skip-aot vanguard.core

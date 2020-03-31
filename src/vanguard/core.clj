@@ -2,6 +2,7 @@
   (:require
     [clojure.pprint :refer [pprint]]
     [clojure.string :as str]
+    [clojure.tools.cli :refer [parse-opts]]
     [vanguard.web :as web]
     [vanguard.util :as u])
   (:import
@@ -56,10 +57,21 @@
     (mapv #(get squashed %) (keys squashed))))
 
 
+(def cli-options
+  ;; An option with a required argument
+  [["-s" "--settings file" "settings file"
+    :default "settings.edn"]
+
+   ;; A boolean option defaulting to nil
+   ["-h" "--help"]])
+
+
 (defn -main
   [& args]
-  (let [outfile (or (first args) "account.edn")
-        data    (-> (scrape-account-data (u/load-edn "settings.edn"))
-                    squash-cash-holdings)]
+  (let [opts          (parse-opts args cli-options)
+        settings      (u/load-edn (get-in opts [:options :settings]))
+        outfile       (or (:output-file settings) "account.edn")
+        data          (-> (scrape-account-data settings)
+                          squash-cash-holdings)]
     (println "output to" outfile)
     (spit outfile data)))
