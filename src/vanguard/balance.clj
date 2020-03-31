@@ -48,7 +48,9 @@
 
 (defn print-summary
   [account]
-  (clojure.pprint/pprint account))
+  (printf "%-5s  %-10s %-10s %-10s\n" "SYMBOL" "AMOUNT" "TARGET" "DELTA")
+  (doseq [[symbol {:keys [amount target-amount delta]}] account]
+    (printf "%-5s: %,10.2f %,10.2f %,10.2f\n" symbol amount target-amount delta)))
 
 
 (defn -main
