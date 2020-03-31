@@ -82,4 +82,3 @@
         rows))
     []
     (.findElements table (By/tagName "tr"))))
-
