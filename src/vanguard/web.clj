@@ -53,6 +53,12 @@
        :name   (nth row 1)
        :amount (u/$->number (nth row 7))}
 
+      ;; mutual fund alternate
+      (= 15 (count row))
+      {:symbol (nth row 0)
+       :name   (nth row 1)
+       :amount (u/$->number (nth row 8))}
+
       ;; stock
       (= 12 (count row))
       {:symbol (nth row 0)

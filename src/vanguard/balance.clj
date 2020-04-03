@@ -14,8 +14,10 @@
     (fn [m ticker {:keys [amount target-allocation] :or {target-allocation 0} :as record}]
       (let [target%       (double (/ target-allocation 100))
             target-amount (u/round (* target% total) 2)
-            delta         (u/round (- target-amount amount) 2)]
-        (assoc m ticker (assoc record :target-amount target-amount :delta delta))))
+            delta         (u/round (- target-amount amount) 2)
+            actual%       (u/round (* 100 (/ amount total)) 1)
+            delta%        (- actual% target-allocation)]
+        (assoc m ticker (assoc record :target-amount target-amount :delta delta :actual% actual% :delta% delta%))))
     account
     account))
 
@@ -47,12 +49,29 @@
     target-allocation))
 
 
+(defn allocate-composites
+  [account composites]
+  (reduce-kv
+    (fn [account symbol components]
+      (let [amount-to-split  (get-in account [symbol :amount])
+            account (dissoc account symbol)]
+        (reduce-kv
+          (fn [account symbol pct]
+            (update-in account [symbol :amount] #(u/round (+ % (* (float (/ pct 100)) amount-to-split)) 2)))
+          account
+          components)))
+    account
+    composites))
+
+
 (defn print-summary
   [account]
-  (printf "%-60s %-5s   %-10s %-10s %-10s\n" "NAME" "SYMBOL" "AMOUNT" "TARGET" "DELTA")
-  (doseq [[symbol {:keys [name amount target-amount delta]}] account]
-    (printf "%-60s (%-5s): %,10.2f %,10.2f %,10.2f\n" name symbol amount target-amount delta))
-  (println (apply str (repeat 102 \-)))
+  (printf "%-61s %-5s %12s %10s %4s %4s %5s %11s\n" "NAME" "SYMBOL" "AMOUNT" "TARGET" "TGT%" "%" "DEL%" "DELTA")
+  (doseq [[symbol {:keys [name amount target-amount target-allocation actual% delta delta%]
+                   :or   {target-allocation 0.0 actual% 0.0 delta% 0}}] account]
+    (printf "%-61s (%-5s): %,10.2f %,10.2f %,4.1f %,4.1f %,5.1f %,11.2f\n"
+            name symbol amount target-amount (float target-allocation) (float actual%) (float delta%) delta))
+  (println (apply str (repeat 120 \-)))
   (let [current-balance (sum-by account :amount)
         target-balance  (sum-by account :target-amount)]
     (printf "%s %,10.2f %,10.2f\n" (apply str (repeat 69 " ")) current-balance target-balance)))
@@ -78,7 +97,9 @@
         cash-to-add       (get-in opts [:options :cash])
         target-allocation (:target-allocation settings)
         account-file      (or (:output-file settings) "account.edn")
-        account           (merge-target-allocation (->ticker-map (u/load-edn account-file)) target-allocation)
+        account           (-> (->ticker-map (u/load-edn account-file))
+                              (merge-target-allocation target-allocation)
+                              (allocate-composites (:composite-funds settings)))
         total             (+ cash-to-add (sum-by account :amount))
         rebalanced        (rebalance account total)]
     (print-summary rebalanced)))
