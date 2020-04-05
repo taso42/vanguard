@@ -13,8 +13,7 @@ pom.xml.asc
 
 ##
 settings.edn
-account.edn
+accounts.edn
 *.iml
 /.idea
 **/*~
-/local

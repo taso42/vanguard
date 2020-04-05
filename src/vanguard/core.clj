@@ -13,29 +13,25 @@
 
 
 (defn login
-  [settings]
-  (let [^RemoteWebDriver driver (web/connect (:start-page settings))]
-    (web/log-on driver (:username settings) (:password settings))
+  [username password start-page account-page]
+  (let [^RemoteWebDriver driver (web/connect start-page)]
+    (web/log-on driver username password)
     (println "waiting for login")
     (doto
       (WebDriverWait. driver 120)
       (.until (ExpectedConditions/presenceOfElementLocated (By/id "BalancesTabBoxId_tabBoxItemLink0"))))
     (println "logged in.")
+    (.get driver account-page)
     driver))
 
 
 (defn scrape-account-data
-  [settings]
-  (let [^RemoteWebDriver driver (login settings)]
-    (try
-      (.get driver (:account-link settings))
-      (doto
-        (WebDriverWait. driver 10)
-        (.until (ExpectedConditions/presenceOfElementLocated (By/id (:account-table-id settings)))))
-      (let [table (.findElement driver (By/id (:account-table-id settings)))]
-        (web/parse-account-table table))
-      (finally
-        (.quit driver)))))
+  [^RemoteWebDriver driver account-table-id]
+  (doto
+    (WebDriverWait. driver 10)
+    (.until (ExpectedConditions/presenceOfElementLocated (By/id account-table-id))))
+  (let [table (.findElement driver (By/id account-table-id))]
+    (web/parse-account-table table)))
 
 
 (defn- trim-name
@@ -68,10 +64,20 @@
 
 (defn -main
   [& args]
-  (let [opts          (parse-opts args cli-options)
-        settings      (u/load-edn (get-in opts [:options :settings]))
-        outfile       (or (:output-file settings) "account.edn")
-        data          (-> (scrape-account-data settings)
-                          squash-cash-holdings)]
-    (println "output to" outfile)
-    (spit outfile data)))
+  (let [opts                    (parse-opts args cli-options)
+        settings                (u/load-edn (get-in opts [:options :settings]))
+        ^RemoteWebDriver driver (login (:username settings)
+                                       (:password settings)
+                                       (:start-page settings)
+                                       (:account-page settings))]
+    (try
+      (->> (reduce-kv
+             (fn [account-data name {:keys [account-table-id]}]
+               (let [account (-> (scrape-account-data driver account-table-id)
+                                 (squash-cash-holdings))]
+                 (assoc account-data name account)))
+             {}
+             (:accounts settings))
+           (spit (or (:output-file settings) "accounts.edn")))
+      (finally
+        (.quit driver)))))

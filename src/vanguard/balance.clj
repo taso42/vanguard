@@ -53,8 +53,8 @@
   [account composites]
   (reduce-kv
     (fn [account symbol components]
-      (let [amount-to-split  (get-in account [symbol :amount])
-            account (dissoc account symbol)]
+      (let [amount-to-split (get-in account [symbol :amount])
+            account         (dissoc account symbol)]
         (reduce-kv
           (fn [account symbol pct]
             (update-in account [symbol :amount] #(u/round (+ % (* (float (/ pct 100)) amount-to-split)) 2)))
@@ -82,6 +82,8 @@
   [["-s" "--settings FILE" "settings file"
     :default "settings.edn"]
 
+   ["-a" "--account ACCOUNT" "account nickname"]
+
    ["-c" "--cash AMOUNT" "cash to add"
     :parse-fn #(Integer/parseInt %)
     :default 0]
@@ -95,11 +97,13 @@
   (let [opts              (parse-opts args cli-options)
         settings          (u/load-edn (get-in opts [:options :settings]))
         cash-to-add       (get-in opts [:options :cash])
-        target-allocation (:target-allocation settings)
-        account-file      (or (:output-file settings) "account.edn")
-        account           (-> (->ticker-map (u/load-edn account-file))
+        account-name      (get-in opts [:options :account])
+        target-allocation (get-in settings [:accounts account-name :target-allocation])
+        account           (-> (u/load-edn "accounts.edn")
+                              (get account-name)
+                              (->ticker-map)
                               (merge-target-allocation target-allocation)
-                              (allocate-composites (:composite-funds settings)))
+                              (allocate-composites (get-in settings [:accounts account-name :composite-funds])))
         total             (+ cash-to-add (sum-by account :amount))
         rebalanced        (rebalance account total)]
     (print-summary rebalanced)))
