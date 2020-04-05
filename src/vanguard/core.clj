@@ -54,11 +54,9 @@
 
 
 (def cli-options
-  ;; An option with a required argument
   [["-s" "--settings file" "settings file"
     :default "settings.edn"]
 
-   ;; A boolean option defaulting to nil
    ["-h" "--help"]])
 
 
