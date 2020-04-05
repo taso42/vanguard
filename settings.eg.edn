@@ -1,17 +1,29 @@
-{:username          "Mr.Investor"
- :password          "secret"
- :start-page        "https://personal.vanguard.com/us/hnwnesc/nesc/LoginPage"
- :account-link      "https://personal.vanguard.com/us/TPView#11111111"
+{:username     "Mr.Investor"
+ :password     "secret"
+ :start-page   "https://personal.vanguard.com/us/hnwnesc/nesc/LoginPage"
+ :account-page "https://personal.vanguard.com/us/TPView#11111111"
 
- ;; no clue if this table name is durable
- :account-table-id  "BHForm2:accountID:0:_id243"
+ :accounts     {"account1" {:account-table-id  "BHForm2:accountID:0:_id243"
+                            :target-allocation {"VIPSX" 10.5
+                                                "VBTLX" 10.5
+                                                "VTABX" 9
+                                                "VTSAX" 24.5
+                                                "BRK B" 24.5
+                                                "VTIAX" 21}}
 
- :target-allocation {"VIPSX" 10.5
-                     "VBTLX" 10.5
-                     "VTABX" 9
-                     "VTSAX" 24.5
-                     "BRK B" 24.5
-                     "VTIAX" 21}
+                "account2" {:account-table-id  "BHForm2:accountID:10:_id243"
+                            :target-allocation {"VBTLX" 14
+                                                "VTABX" 6
+                                                "VTIAX" 24
+                                                "VTSAX" 56}}
 
- ;; output file for the fetched data. the rebalance program acts on this
- :output-file       "account.edn"}
+                "account3" {:account-table-id  "BHForm2:accountID:8:_id243"
+                            :target-allocation {"VBTLX" 22
+                                                "VIPSX" 22
+                                                "VTABX" 11
+                                                "VTSAX" 31.5
+                                                "VTIAX" 13.5}
+                            :composite-funds   {"VASGX" {"VBTLX" 14.4
+                                                         "VTABX" 6
+                                                         "VTSAX" 47.6
+                                                         "VTIAX" 32}}}}}
