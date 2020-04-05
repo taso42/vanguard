@@ -64,6 +64,15 @@
     composites))
 
 
+(defn remove-zero-amounts
+  [account]
+  (into {}
+        (filter
+             (fn [[symbol {:keys [amount target-amount] :or {target-amount 0}}]]
+               (or (> amount 0)
+                    (> target-amount 0)))
+             account)))
+
 (defn print-summary
   [account]
   (printf "%-61s %-5s %12s %10s %4s %4s %5s %11s\n" "NAME" "SYMBOL" "AMOUNT" "TARGET" "TGT%" "%" "DEL%" "DELTA")
@@ -74,11 +83,10 @@
   (println (apply str (repeat 120 \-)))
   (let [current-balance (sum-by account :amount)
         target-balance  (sum-by account :target-amount)]
-    (printf "%s %,10.2f %,10.2f\n" (apply str (repeat 69 " ")) current-balance target-balance)))
+    (printf "%s %,10.2f %,10.2f\n" (apply str (repeat 70 " ")) current-balance target-balance)))
 
 
 (def cli-options
-  ;; An option with a required argument
   [["-s" "--settings FILE" "settings file"
     :default "settings.edn"]
 
@@ -88,7 +96,6 @@
     :parse-fn #(Integer/parseInt %)
     :default 0]
 
-   ;; A boolean option defaulting to nil
    ["-h" "--help"]])
 
 
@@ -103,7 +110,8 @@
                               (get account-name)
                               (->ticker-map)
                               (merge-target-allocation target-allocation)
-                              (allocate-composites (get-in settings [:accounts account-name :composite-funds])))
+                              (allocate-composites (get-in settings [:accounts account-name :composite-funds]))
+                              (remove-zero-amounts))
         total             (+ cash-to-add (sum-by account :amount))
         rebalanced        (rebalance account total)]
     (print-summary rebalanced)))
