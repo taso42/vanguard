@@ -8,9 +8,6 @@
     (org.openqa.selenium.remote RemoteWebElement RemoteWebDriver)))
 
 
-(System/setProperty "webdriver.chrome.driver" "/Users/taso/Downloads/chromedriver")
-
-
 (defn populate
   [^RemoteWebElement element content]
   (.clear element)

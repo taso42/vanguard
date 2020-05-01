@@ -2,6 +2,7 @@
  :password     "secret"
  :start-page   "https://personal.vanguard.com/us/hnwnesc/nesc/LoginPage"
  :account-page "https://personal.vanguard.com/us/TPView#11111111"
+ :driver       "/Users/mr.investor/bin/chromedriver"
 
  :accounts     {"account1" {:account-table-id  "BHForm2:accountID:0:_id243"
                             :target-allocation {"VIPSX" 10.5

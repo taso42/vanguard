@@ -19,7 +19,7 @@
     (println "waiting for login")
     (doto
       (WebDriverWait. driver 120)
-      (.until (ExpectedConditions/presenceOfElementLocated (By/id "BalancesTabBoxId_tabBoxItemLink0"))))
+      (.until (ExpectedConditions/presenceOfElementLocated (By/id "balances"))))
     (println "logged in.")
     (.get driver account-page)
     driver))
@@ -64,6 +64,7 @@
   [& args]
   (let [opts                    (parse-opts args cli-options)
         settings                (u/load-edn (get-in opts [:options :settings]))
+        _                       (System/setProperty "webdriver.chrome.driver" (:driver settings))
         ^RemoteWebDriver driver (login (:username settings)
                                        (:password settings)
                                        (:start-page settings)
